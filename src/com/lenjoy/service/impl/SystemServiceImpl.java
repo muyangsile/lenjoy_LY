@@ -6,6 +6,7 @@ import com.lenjoy.entity.MenuInfo;
 import com.lenjoy.entity.SysUserInfo;
 import com.lenjoy.service.MenuInfoService;
 import com.lenjoy.service.SystemService;
+import com.lenjoy.utils.MD5Utils;
 import com.lenjoy.utils.SessionUtil;
 import com.lenjoy.utils.TrendsSwitchUtil;
 
@@ -34,8 +35,8 @@ public class SystemServiceImpl implements SystemService {
             String userName = input.next();
             System.out.print("请输入密码：");
             String password = input.next();
-            //TODO 去数据查询有没有这个用户
-            SysUserInfo sysUserInfo = sysUserInfoDao.getSysUserInfoByUserNameAndPassword(userName, password);
+            //密码加密（加密规则：密码先加密一次 然后把用户名作为盐 再对加密后的密码做一次加密）
+            SysUserInfo sysUserInfo = sysUserInfoDao.getSysUserInfoByUserNameAndPassword(userName, MD5Utils.encryptMD5(password,userName));
             if (sysUserInfo != null) {
                 flag = false;
                 SessionUtil.sysUserInfo = sysUserInfo;

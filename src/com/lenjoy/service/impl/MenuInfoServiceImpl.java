@@ -4,6 +4,7 @@ import com.lenjoy.dao.MenuInfoDao;
 import com.lenjoy.dao.impl.MenuInfoDaoImpl;
 import com.lenjoy.entity.MenuInfo;
 import com.lenjoy.service.MenuInfoService;
+import com.lenjoy.service.SystemService;
 import com.lenjoy.utils.SessionUtil;
 import com.lenjoy.utils.TrendsSwitchUtil;
 
@@ -20,6 +21,7 @@ import java.util.Scanner;
  */
 public class MenuInfoServiceImpl implements MenuInfoService {
     private MenuInfoDao menuInfoDao = new MenuInfoDaoImpl();
+
 
     @Override
     public void showMainMenu() {
@@ -53,7 +55,13 @@ public class MenuInfoServiceImpl implements MenuInfoService {
     @Override
     public void addMenu() {
         Scanner input = new Scanner(System.in);
-        Integer pId = getMenuInfoPid();
+        Integer pId = getMenuInfoPid(-1);
+        //如果Pid为空，说明用户取消了添加菜单的操作
+        if (pId == null) {
+            //调用添加菜单的上级目录的方法
+            SystemService systemService = new SystemServiceImpl();
+            systemService.menuSettings();
+        }
         MenuInfo menuInfo = new MenuInfo();
         System.out.print("请输入菜单名称：");
         menuInfo.setName(input.next());
@@ -65,16 +73,40 @@ public class MenuInfoServiceImpl implements MenuInfoService {
         menuInfo.setLevel(input.nextInt());
         System.out.print("请输入菜单类型：");
         menuInfo.setType(input.nextInt());
-        //TODO 暂时用控制台录入的方式添加
-        System.out.print("请输入菜单PID：");
-        menuInfo.setPId(input.nextInt());
+        menuInfo.setPId(pId);
         menuInfo.setCreateUser(SessionUtil.sysUserInfo.getId());
         menuInfo.setUpdateUser(SessionUtil.sysUserInfo.getId());
         int rows = menuInfoDao.addMenuInfo(menuInfo);
         System.out.println(rows > 0 ? "添加成功" : "添加失败");
+
+        SessionUtil.menuInfo = menuInfoDao.getMenuInfoById(SessionUtil.menuInfo.getPId());
+        //返回菜单管理列表
+        TrendsSwitchUtil.invokeMethod();
     }
 
-    private Integer getMenuInfoPid() {
-        return null;
+    private Integer getMenuInfoPid(Integer pId) {
+
+        System.out.println("\n-菜单管理-->添加菜单-->菜单列表-----------------");
+        List<MenuInfo> menuInfoList = menuInfoDao.getMenuInfoListByPId(pId);
+        for (int i = 0; i < menuInfoList.size(); i++) {
+            System.out.println("\t" + (i + 1) + menuInfoList.get(i).getName());
+        }
+
+        System.out.print("请选择");
+
+        System.out.println("[1]:添加菜单\t[2]:选择菜单添加子菜单 [其他]:取消");
+        Scanner input = new Scanner(System.in);
+        System.out.print("请选择编号：");
+        String num = input.next();
+        switch (num) {
+            case "1":
+                return pId;
+            case "2":
+                System.out.print("请选择父级菜单：");
+                int menuId = input.nextInt();
+                return getMenuInfoPid(menuInfoList.get(menuId - 1).getId());
+            default:
+                return null;
+        }
     }
 }

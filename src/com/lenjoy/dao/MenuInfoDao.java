@@ -26,4 +26,11 @@ public interface MenuInfoDao {
      * @return 受影响行数（用来判断是否成功添加）
      */
     int addMenuInfo(MenuInfo menuInfo);
+
+    /**
+     * 根据菜单ID获取菜单对象
+     * @param id 菜单ID
+     * @return 菜单对象
+     */
+    MenuInfo getMenuInfoById(Integer id);
 }
