@@ -39,10 +39,34 @@ public class MenuInfoServiceImpl implements MenuInfoService {
         for (int i = 0; i < menuInfoList.size(); i++) {
             System.out.println("\t" + (i + 1) + ":" + menuInfoList.get(i).getName());
         }
+        System.out.println(pId == -1 ? "\t[0|其他]：退出系统" : "\t[0|其他]：返回上一级");
         boolean flag = false;
         do {
             System.out.print("请选择菜单：");
-            int menuId = input.nextInt();
+            String menuIdStr = input.next();
+            int menuId = 0;
+            //判断用户输入的编号是否是0
+            if ("0".equals(menuIdStr)) {
+                //如果是 再判断pId是否为-1 如果是 退出系统
+                if (pId == -1) {
+                    System.exit(0);
+                } else {
+                    //如果pId不等于-1 就执行返回上一级菜单的方法
+                    TrendsSwitchUtil.rollbackMethod();
+                }
+            }
+            try {
+                //将字符串转换为数字
+                menuId = Integer.parseInt(menuIdStr);
+            } catch (NumberFormatException e) {
+                //当字符转换为数字出错时（用户选择了 其他（退出系统|返回上一级）），的处理逻辑
+                if (pId == -1) {
+                    System.exit(0);
+                } else {
+                    TrendsSwitchUtil.rollbackMethod();
+                }
+            }
+
             if (menuId > 0 && menuId <= menuInfoList.size()) {
                 SessionUtil.menuInfo = menuInfoList.get(menuId - 1);
             } else {
@@ -57,31 +81,28 @@ public class MenuInfoServiceImpl implements MenuInfoService {
         Scanner input = new Scanner(System.in);
         Integer pId = getMenuInfoPid(-1);
         //如果Pid为空，说明用户取消了添加菜单的操作
-        if (pId == null) {
-            //调用添加菜单的上级目录的方法
-            SystemService systemService = new SystemServiceImpl();
-            systemService.menuSettings();
+        if (pId != null) {
+            MenuInfo menuInfo = new MenuInfo();
+            System.out.print("请输入菜单名称：");
+            menuInfo.setName(input.next());
+            System.out.print("请输入菜单URL：");
+            menuInfo.setUrl(input.next());
+            System.out.print("请输入菜单小图标：");
+            menuInfo.setIcon(input.next());
+            System.out.print("请输入菜单序号：");
+            menuInfo.setLevel(input.nextInt());
+            System.out.print("请输入菜单类型：");
+            menuInfo.setType(input.nextInt());
+            menuInfo.setPId(pId);
+            menuInfo.setCreateUser(SessionUtil.sysUserInfo.getId());
+            menuInfo.setUpdateUser(SessionUtil.sysUserInfo.getId());
+            int rows = menuInfoDao.addMenuInfo(menuInfo);
+            System.out.println(rows > 0 ? "添加成功" : "添加失败");
         }
-        MenuInfo menuInfo = new MenuInfo();
-        System.out.print("请输入菜单名称：");
-        menuInfo.setName(input.next());
-        System.out.print("请输入菜单URL：");
-        menuInfo.setUrl(input.next());
-        System.out.print("请输入菜单小图标：");
-        menuInfo.setIcon(input.next());
-        System.out.print("请输入菜单序号：");
-        menuInfo.setLevel(input.nextInt());
-        System.out.print("请输入菜单类型：");
-        menuInfo.setType(input.nextInt());
-        menuInfo.setPId(pId);
-        menuInfo.setCreateUser(SessionUtil.sysUserInfo.getId());
-        menuInfo.setUpdateUser(SessionUtil.sysUserInfo.getId());
-        int rows = menuInfoDao.addMenuInfo(menuInfo);
-        System.out.println(rows > 0 ? "添加成功" : "添加失败");
-
-        SessionUtil.menuInfo = menuInfoDao.getMenuInfoById(SessionUtil.menuInfo.getPId());
+       /* SessionUtil.menuInfo = menuInfoDao.getMenuInfoById(SessionUtil.menuInfo.getPId());
         //返回菜单管理列表
-        TrendsSwitchUtil.invokeMethod();
+        TrendsSwitchUtil.invokeMethod();*/
+        TrendsSwitchUtil.rollbackMethod();
     }
 
     private Integer getMenuInfoPid(Integer pId) {
