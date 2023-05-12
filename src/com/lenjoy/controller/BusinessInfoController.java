@@ -27,4 +27,11 @@ public class BusinessInfoController {
     public void settleIn(){
         businessInfoService.settleIn();
     }
+
+    /**
+     * 商家登录
+     */
+    public void login(){
+        businessInfoService.login();
+    }
 }

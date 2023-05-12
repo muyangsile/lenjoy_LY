@@ -25,4 +25,13 @@ public class BusinessInfoDaoImpl extends BaseDao<BusinessInfo> implements Busine
                       businessInfo.getAddress()
         );
     }
+
+    @Override
+    public BusinessInfo getBusinessInfoByUserNameAndPassword(String userName, String password) {
+        return selectOne("select * from t_business_info where user_name=? and `password`=?",
+                BusinessInfo.class,
+                userName,
+                password
+                );
+    }
 }

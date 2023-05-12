@@ -21,10 +21,10 @@ import java.util.Scanner;
  */
 public class BusinessInfoServiceImpl implements BusinessInfoService {
     private BusinessInfoDao businessInfoDao = new BusinessInfoDaoImpl();
+    private Scanner input = new Scanner(System.in);
 
     @Override
     public void settleIn() {
-        Scanner input = new Scanner(System.in);
         System.out.println("\n===================商家入驻====================");
         System.out.print("请输入店铺名：");
         String name = input.next();
@@ -58,4 +58,39 @@ public class BusinessInfoServiceImpl implements BusinessInfoService {
         menuInfoService.showMenu(SessionUtil.menuInfo.getId());
         TrendsSwitchUtil.invokeMethod();
     }
+
+    @Override
+    public void login() {
+        System.out.println("\n================商家登录===================");
+        System.out.print("请输入用户名：");
+        String userName = input.next();
+        System.out.print("请输入密码：");
+        String password = input.next();
+        String encryptedPwd = MD5Utils.encryptMD5(password, userName);
+        BusinessInfo businessInfo = businessInfoDao.getBusinessInfoByUserNameAndPassword(userName, encryptedPwd);
+        MenuInfoService menuInfoService = new MenuInfoServiceImpl();
+        if (businessInfo != null) {
+            System.out.println("登录成功，欢迎您：" + businessInfo.getName());
+            SessionUtil.setAttribute("businessInfo", businessInfo);
+            //显示招牌
+            showBusinessInfo(businessInfo);
+            //显示登录成功之后的菜单
+            menuInfoService.showMenu(SessionUtil.menuInfo.getId());
+            TrendsSwitchUtil.invokeMethod();
+        } else {
+            System.out.println("账号或密码错误，登录失败！");
+            menuInfoService.showMenu(SessionUtil.menuInfo.getPId());
+            TrendsSwitchUtil.invokeMethod();
+        }
+    }
+
+
+    private void showBusinessInfo(BusinessInfo businessInfo){
+        System.out.println("\n\t#########################################");
+        System.out.println("\t#\t\t\t"+businessInfo.getName()+"\t⭐:"+businessInfo.getScore());
+        System.out.println("\t#\t地址："+businessInfo.getAddress());
+        System.out.println("\t#\t店长：["+businessInfo.getLxrName()+"]  联系方式：["+businessInfo.getTel()+"]");
+        System.out.println("\t#########################################\n");
+    }
+
 }
